@@ -1,4 +1,5 @@
 <?php
+session_start(); // Add this line
 require 'db.php';
 header('Content-Type: application/json');
 
@@ -75,31 +76,237 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Add movie handling
-    if ($data['action'] === 'save_movie') {
-        $id = $data['id'] ?? null;
-        $title = mysqli_real_escape_string($conn, $data['title']);
-        $description = mysqli_real_escape_string($conn, $data['description']);
-        $duration = (int)$data['duration'];
-
-        if ($id) {
-            $stmt = mysqli_prepare($conn, "UPDATE movies SET title=?, description=?, duration=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "ssii", $title, $description, $duration, $id);
-        } else {
-            $stmt = mysqli_prepare($conn, "INSERT INTO movies (title, description, duration) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "ssi", $title, $description, $duration);
-        }
-        
-        if (mysqli_stmt_execute($stmt)) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false]);
-        }
-    }
-    
-    // Add user management functions
+function isAdmin() {
+    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
+// Movies API
+if (isset($_POST['action']) && $_POST['action'] === 'add_movie' && isAdmin()) {
+    $uploadDir = '../uploads/';
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $maxSize = 5 * 1024 * 1024; // 5MB
+
+    try {
+        $title = mysqli_real_escape_string($conn, $_POST['title']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $duration = (int)$_POST['duration'];
+        $price = (float)$_POST['price'];
+
+        if (!is_dir($uploadDir)) {
+            if (!mkdir($uploadDir, 0755, true)) {
+                throw new Exception('Failed to create upload directory');
+            }
+        }
+
+        if (!isset($_FILES['image'])) {
+            throw new Exception('No image file uploaded');
+        }
+
+        $file = $_FILES['image'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('File upload error: ' . $file['error']);
+        }
+
+        $fileType = mime_content_type($file['tmp_name']);
+        if (!in_array($fileType, $allowedTypes)) {
+            throw new Exception('Invalid file type');
+        }
+
+        if ($file['size'] > $maxSize) {
+            throw new Exception('File too large');
+        }
+
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid('movie_') . '.' . $extension;
+        $targetPath = $uploadDir . $fileName;
+
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            throw new Exception('Failed to move uploaded file');
+        }
+
+        $stmt = mysqli_prepare($conn, 
+            "INSERT INTO movies (title, description, duration, price, image) 
+            VALUES (?, ?, ?, ?, ?)");
+            
+        if (!$stmt) {
+            throw new Exception('Failed to prepare statement: ' . mysqli_error($conn));
+        }
+
+        mysqli_stmt_bind_param($stmt, "ssids", 
+            $title, $description, $duration, $price, $fileName);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception('Failed to execute statement: ' . mysqli_stmt_error($stmt));
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Movie added successfully']);
+
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Error adding movie: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+// User Management
+if ($_GET['action'] === 'get_users' && isAdmin()) {
+    try {
+        $stmt = mysqli_prepare($conn, "SELECT id, username, email, role FROM users");
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $users = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        echo json_encode($users);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    }
+    exit;
+}
+// Booking Management
+if ($_POST['action'] === 'update_booking' && isAdmin()) {
+    $bookingId = (int)$_POST['id'];
+    $newStatus = mysqli_real_escape_string($conn, $_POST['status']);
+    
+    $stmt = mysqli_prepare($conn, "UPDATE bookings SET status = ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "si", $newStatus, $bookingId);
+    mysqli_stmt_execute($stmt);
+    
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// GET Endpoints
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Movie Analytics
+    if ($_GET['action'] === 'movie_analytics' && isAdmin()) {
+        $analytics = [];
+        
+        // Total Movies
+        $result = mysqli_query($conn, "SELECT COUNT(*) AS total_movies FROM movies");
+        $analytics['total_movies'] = mysqli_fetch_assoc($result)['total_movies'];
+        
+        // Revenue by Movie
+        $result = mysqli_query($conn,
+            "SELECT m.title, SUM(b.total) AS revenue 
+            FROM bookings b
+            JOIN movies m ON b.movie_id = m.id
+            GROUP BY m.id");
+        $analytics['revenue_by_movie'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        
+        // Bookings per Movie
+        $result = mysqli_query($conn,
+            "SELECT m.title, COUNT(b.id) AS bookings 
+            FROM movies m
+            LEFT JOIN bookings b ON m.id = b.movie_id
+            GROUP BY m.id");
+        $analytics['bookings_per_movie'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        
+        echo json_encode($analytics);
+        exit;
+    }
+
+    // User Management
+    if ($_GET['action'] === 'get_users' && isAdmin()) {
+        $result = mysqli_query($conn, "SELECT id, username, email, role FROM users");
+        echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC));
+        exit;
+    }
+
+    // Booking Management
+    if ($_GET['action'] === 'get_bookings' && isAdmin()) {
+        $result = mysqli_query($conn,
+            "SELECT b.id, u.username, m.title, b.seats, b.total, b.status, b.created_at 
+            FROM bookings b
+            JOIN users u ON b.user_id = u.id
+            JOIN movies m ON b.movie_id = m.id");
+        echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC));
+        exit;
+    }
+    // Update Movie
+    if (isset($_POST['action']) && $_POST['action'] === 'update_movie' && isAdmin()) {
+        try {
+            $movieId = (int)$_POST['movie_id'];
+            $title = mysqli_real_escape_string($conn, $_POST['title']);
+            $description = mysqli_real_escape_string($conn, $_POST['description']);
+            $duration = (int)$_POST['duration'];
+            $price = (float)$_POST['price'];
+
+            $updateFields = [];
+            $params = [];
+            $types = '';
+
+            // Build dynamic update query
+            $updateFields[] = "title = ?";
+            $params[] = $title;
+            $types .= 's';
+            
+            $updateFields[] = "description = ?";
+            $params[] = $description;
+            $types .= 's';
+            
+            $updateFields[] = "duration = ?";
+            $params[] = $duration;
+            $types .= 'i';
+            
+            $updateFields[] = "price = ?";
+            $params[] = $price;
+            $types .= 'd';
+
+            // Handle image update
+            if (!empty($_FILES['image']['name'])) {
+                // Existing image upload code...
+                $updateFields[] = "image = ?";
+                $params[] = $fileName;
+                $types .= 's';
+            }
+
+            $params[] = $movieId;
+            $types .= 'i';
+
+            $query = "UPDATE movies SET " . implode(', ', $updateFields) . " WHERE id = ?";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, $types, ...$params);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                echo json_encode(['success' => true, 'message' => 'Movie updated successfully']);
+            } else {
+                throw new Exception('Update failed: ' . mysqli_stmt_error($stmt));
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Delete Movie
+    if (isset($_POST['action']) && $_POST['action'] === 'delete_movie' && isAdmin()) {
+        try {
+            $movieId = (int)$_POST['id'];
+            
+            // First get image path to delete file
+            $result = mysqli_query($conn, "SELECT image FROM movies WHERE id = $movieId");
+            $movie = mysqli_fetch_assoc($result);
+            if ($movie) {
+                $imagePath = '../uploads/' . $movie['image'];
+                if (file_exists($imagePath)) unlink($imagePath);
+            }
+
+            $stmt = mysqli_prepare($conn, "DELETE FROM movies WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "i", $movieId);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                echo json_encode(['success' => true, 'message' => 'Movie deleted successfully']);
+            } else {
+                throw new Exception('Delete failed: ' . mysqli_stmt_error($stmt));
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+}
+
 
 mysqli_close($conn);
 ?>
