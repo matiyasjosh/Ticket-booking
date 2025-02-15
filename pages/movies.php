@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Fetch fresh data from API
-    fetch('/api.php?action=get_movies')
+    fetch('/api/api.php?action=get_movies')
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();

@@ -75,6 +75,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
+if (isset($_GET["movie_id"])) {
+    $movie_id = $_GET["movie_id"];
+    $seats = [];
+
+    $stmt = $conn->prepare("SELECT seats FROM bookings WHERE movie_id = ? AND status != 'cancelled'");
+    $stmt->bind_param("i", $movie_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $seats = array_merge($seats, json_decode($row["seats"], true));
+    }
+
+    echo json_encode(["booked_seats" => $seats]);
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Add movie handling
     if ($data['action'] === 'save_movie') {

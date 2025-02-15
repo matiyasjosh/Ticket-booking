@@ -1,105 +1,52 @@
-<!-- Ticket Modal -->
-<div id="ticketModal" class="fixed inset-0 z-50 hidden">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-    
-    <!-- Modal Content -->
-    <div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
-        <div class="bg-white rounded-lg shadow-xl overflow-hidden">
-            <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white">Your Ticket</h3>
-                <button onclick="closeTicketModal()" class="text-white hover:text-white/80">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+<!-- ticket_modal.php -->
+<div id="ticketModal" class="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white text-black rounded-xl shadow-lg w-full max-w-md p-6 relative">
+        <!-- Close Button -->
+        <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">&times;</button>
+
+        <!-- Step 1: Ticket Selection -->
+        <div id="step1">
+            <h2 class="text-2xl font-bold text-center mb-4">Select Tickets</h2>
             
-            <!-- Modal Body -->
-            <div class="p-6 space-y-6">
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <p class="text-gray-600">Movie</p>
-                        <p class="font-semibold" id="ticketMovie"></p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Date</p>
-                        <p class="font-semibold" id="ticketDate"></p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Time</p>
-                        <p class="font-semibold" id="ticketTime"></p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Seat</p>
-                        <p class="font-semibold" id="ticketSeat"></p>
-                    </div>
-                </div>
-                
-                <!-- Barcode -->
-                <div class="text-center">
-                    <div id="barcodeContainer" class="p-4 bg-white"></div>
-                    <p class="mt-2 text-sm text-gray-600" id="ticketNumber"></p>
-                </div>
-                
-                <!-- Actions -->
-                <div class="flex justify-center gap-4 pt-4">
-                    <button onclick="printTicket()" 
-                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                        Print Ticket
-                    </button>
-                    <button onclick="downloadTicket()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-800 text-sm rounded-lg hover:bg-gray-300">
-                        Download
-                    </button>
-                </div>
+            <!-- Ticket Quantity -->
+            <label class="block text-gray-700 mb-2">Number of Tickets:</label>
+            <input type="number" id="ticketCount" min="1" max="5" value="1" class="w-full p-2 border rounded mb-4" />
+
+            <!-- Seat Selection -->
+            <div class="text-gray-700 mb-2">Choose Seats:</div>
+            <div id="seatGrid" class="grid grid-cols-4 gap-2">
+                <!-- Seats will be generated dynamically -->
             </div>
+
+            <!-- Continue Button -->
+            <button id="continueBtn"
+                class="w-full py-3 mt-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                Continue
+            </button>
+        </div>
+
+        <!-- Step 2: Ticket Confirmation -->
+        <div id="step2" class="hidden">
+            <h2 class="text-2xl font-bold text-center mb-4">Your Ticket</h2>
+
+            <!-- QR Code -->
+            <div class="flex justify-center mb-4">
+                <canvas id="qrCodeCanvas" class="w-32 h-32"></canvas>
+            </div>
+
+            <!-- Ticket Details -->
+            <div class="space-y-3 text-sm text-gray-700">
+                <p><strong>Movie:</strong> <span id="movieTitle"></span></p>
+                <p><strong>Seats:</strong> <span id="selectedSeats"></span></p>
+                <p><strong>Showtime:</strong> <span id="showTime"></span></p>
+                <p><strong>Total Price:</strong> <span id="ticketPrice"> Birr</span></p>
+            </div>
+
+            <!-- Confirm Button -->
+            <button id="confirmTicket"
+                class="w-full py-3 mt-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition">
+                Confirm & Close
+            </button>
         </div>
     </div>
 </div>
-
-<!-- Add this script section -->
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<script>
-    function showTicket(ticketData) {
-        // Update modal content with ticket data
-        document.getElementById('ticketMovie').textContent = ticketData.movieTitle;
-        document.getElementById('ticketDate').textContent = ticketData.date;
-        document.getElementById('ticketTime').textContent = ticketData.showtime;
-        document.getElementById('ticketSeat').textContent = ticketData.seat;
-        document.getElementById('ticketNumber').textContent = ticketData.ticketNumber;
-        
-        // Generate barcode
-        JsBarcode("#barcodeCanvas", ticketData.ticketNumber, {
-            format: "CODE128",
-            width: 2,
-            height: 100,
-            displayValue: false
-        });
-        
-        // Show modal
-        document.getElementById('ticketModal').classList.remove('hidden');
-    }
-    
-    function closeTicketModal() {
-        document.getElementById('ticketModal').classList.add('hidden');
-    }
-    
-    function printTicket() {
-        window.print();
-    }
-    
-    function downloadTicket() {
-        // Implementation for downloading ticket as PDF or image
-        // You might want to use a library like html2canvas or jsPDF
-        alert('Download functionality to be implemented');
-    }
-    
-    // Close modal when clicking outside
-    document.getElementById('ticketModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeTicketModal();
-        }
-    });
-</script>
