@@ -18,5 +18,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Julee&family=Just+Another+Hand&family=Marck+Script&family=Rubik+Vinyl&display=swap" rel="stylesheet">
 
-    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        marck: ['Marck Script', 'cursive'],
+                        gloria: ['Gloria Hallelujah', 'cursive'],
+                        julee: ['Julee', 'cursive'],
+                        hand: ['Just Another Hand', 'cursive'],
+                        vinyl: ['Rubik Vinyl', 'cursive']
+                    },
+                }
+            }
+        }
+    </script>
 </head>

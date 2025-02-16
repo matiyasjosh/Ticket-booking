@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Page Header -->
         <div class="mb-12">
-            <h1 class="text-4xl font-bold text-white">Now Showing</h1>
+            <h1 class="text-3xl font-bold text-white">Now Showing</h1>
             <p class="mt-2 text-white/60">Explore our current and upcoming movie selections</p>
         </div>
         
