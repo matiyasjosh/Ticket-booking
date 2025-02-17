@@ -29,7 +29,7 @@
             background-size: cover;
             background-position: center;
             filter: blur(8px);
-            opacity: 0.5; /* Adjust opacity here */
+            opacity: 0.7; /* Adjust opacity here */
             z-index: 0; /* Ensure it stays behind other content */
         }
 

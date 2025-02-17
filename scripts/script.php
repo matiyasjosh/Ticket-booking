@@ -1,10 +1,3 @@
-<?php
-session_start();
-if (!isset($_SESSION["user_id"])) {
-    header("Location: /pages/login.php");
-    exit();
-}
-?>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const modal = document.getElementById("ticketModal");

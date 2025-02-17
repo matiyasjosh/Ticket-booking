@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION["user_id"])) {
+    header("Location: /pages/login.php");
+    exit();
+}
 // Get movie ID from URL parameter
 $movieId = isset($_GET['id']) ? $_GET['id'] : null;
 

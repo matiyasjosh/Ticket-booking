@@ -53,9 +53,8 @@ include __DIR__ . '/../components/navbar.php';
                         <tr class="text-left text-white/60">
                             <th class="pb-4">Movie</th>
                             <th class="pb-4">Date</th>
-                            <th class="pb-4">Time</th>
-                            <th class="pb-4">Seats</th>
-                            <th class="pb-4">Status</th>
+                            <th class="pb-4">Ticket</th>
+                            <th class="pb-4">Unbook</th>
                         </tr>
                     </thead>
                     <tbody id="recent-bookings-body" class="divide-y divide-white/10">
@@ -70,13 +69,13 @@ include __DIR__ . '/../components/navbar.php';
             <div class="bg-white/15 backdrop-blur-sm rounded-xl p-6">
                 <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
                 <div class="space-y-4">
-                    <button class="w-full flex items-center justify-between p-4 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                    <a href="/pages/movies.php" class="w-full flex items-center justify-between p-4 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
                         <span class="flex items-center gap-3">
                             <i class="ph ph-ticket"></i>
                             Book New Ticket
                         </span>
                         <i class="ph ph-arrow-right"></i>
-                    </button>
+                    </a>
                     <button class="w-full flex items-center justify-between p-4 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
                         <span class="flex items-center gap-3">
                             <i class="ph ph-user"></i>
@@ -162,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td class="py-4">${booking.movie_name}</td>
                     <td class="py-4">${booking.show_date}</td>
                     <td class="py-4">
-                        <button id="openModal" class="bg-green-300 text-green-700 px-2 py-1 rounded-full hover:text-green-800 hover:bg-green-100" data-movie-id="${booking.movie_id}" data-seats="${booking.seat_numbers}">
+                        <button id="openModal" class="bg-green-300 text-green-800 px-2 py-1 rounded-full hover:text-green-800 hover:bg-green-100" data-movie-id="${booking.movie_id}" data-seats="${booking.seat_numbers}">
                             Show Ticket
                         </button>
                     </td>
@@ -199,6 +198,6 @@ function cancelBooking(bookingId) {
 }
 </script>
 
-<?php include __DIR__ . '/../scripts/dashboardScript.php'; ?>
-<?php include __DIR__ .'/../components/ticket-modal.php'?>;
+<?php include __DIR__ . '/../scripts/dashboardScript.php';?>
+<?php include __DIR__ .'/../components/ticket-modal.php';?>
 <?php include __DIR__ . '/../components/footer.php'; ?>

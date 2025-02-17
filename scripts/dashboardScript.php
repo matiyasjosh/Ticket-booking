@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedSeatsSpan = document.getElementById("selectedSeats");
     const ticketPriceSpan = document.getElementById("ticketPrice");
 
-    const movieId = '<?php echo $movieId; ?>';
     const userId = '<?php echo $_SESSION["user_id"]; ?>';
 
     function formatDateTime(datetimeStr) {
