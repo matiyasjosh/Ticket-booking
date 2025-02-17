@@ -1,6 +1,7 @@
 <?php 
+session_start();
 if (!isset($_SESSION['user_id'])) {
-    header("Location: /pages/login.php?action=login");  
+    header("Location: /pages/login.php");  
     exit;
 }
 
@@ -26,7 +27,7 @@ include __DIR__ . '/../components/navbar.php';
                     </div>
                     <div>
                         <p class="text-sm text-white/60">Active Tickets</p>
-                        <p class="text-2xl font-bold"></p>
+                        <p class="text-2xl font-bold" id="active-tickets-count"></p>
                     </div>
                 </div>
             </div>
@@ -37,7 +38,7 @@ include __DIR__ . '/../components/navbar.php';
                     </div>
                     <div>
                         <p class="text-sm text-white/60">Upcoming Shows</p>
-                        <p class="text-2xl font-bold">2</p>
+                        <p class="text-2xl font-bold" id="upcoming-movies-count"></p>
                     </div>
                 </div>
             </div>
@@ -57,29 +58,8 @@ include __DIR__ . '/../components/navbar.php';
                             <th class="pb-4">Status</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/10">
-                        <tr>
-                            <td class="py-4">Dune: Part Two</td>
-                            <td class="py-4">Mar 15, 2024</td>
-                            <td class="py-4">7:30 PM</td>
-                            <td class="py-4">F12, F13</td>
-                            <td class="py-4">
-                                <span class="inline-block px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-500">
-                                    Confirmed
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="py-4">Napoleon</td>
-                            <td class="py-4">Mar 18, 2024</td>
-                            <td class="py-4">6:45 PM</td>
-                            <td class="py-4">D8</td>
-                            <td class="py-4">
-                                <span class="inline-block px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-500">
-                                    Pending
-                                </span>
-                            </td>
-                        </tr>
+                    <tbody id="recent-bookings-body" class="divide-y divide-white/10">
+                        <!-- data fetched here -->
                     </tbody>
                 </table>
             </div>
@@ -141,7 +121,9 @@ include __DIR__ . '/../components/navbar.php';
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    fetch('/api/get_active_tickets.php')
+    const userId = <?php echo $_SESSION['user_id']; ?>;    
+    console.log("1 birr", userId);
+    fetch(`/api/get_active_tickets.php?user_id=${userId}`)
         .then(response => response.json())
         .then(data => {
             if (data.active_tickets !== undefined) {
@@ -149,8 +131,74 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         })
         .catch(error => console.error("Error fetching active tickets:", error));
+
+
+    // upcoming moive count
+    fetch(`/api/get_upcoming_movies.php`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.upcoming_movies !== undefined) {
+                document.getElementById("upcoming-movies-count").innerText = data.upcoming_movies;
+            }
+        })
+        .catch(error => console.error("Error fetching upcoming movies:", error));
+
+        // the table part
+        fetch(`/api/get_recent_bookings.php?user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById("recent-bookings-body");
+            tableBody.innerHTML = ""; // Clear previous content
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center">No recent bookings</td></tr>`;
+                return;
+            }
+
+            console.log("Wegentatna hzbtat", data);
+            data.forEach(booking => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="py-4">${booking.movie_name}</td>
+                    <td class="py-4">${booking.show_date}</td>
+                    <td class="py-4">
+                        <button id="openModal" class="bg-green-300 text-green-700 px-2 py-1 rounded-full hover:text-green-800 hover:bg-green-100" data-movie-id="${booking.movie_id}" data-seats="${booking.seat_numbers}">
+                            Show Ticket
+                        </button>
+                    </td>
+                    <td class="py-4">
+                        <button class="bg-red-300 text-red-700 px-2 py-1 rounded-full hover:text-red-700 hover:bg-red-100" onclick="cancelBooking(${booking.booking_id  })">
+                            Cancel
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching recent bookings:", error));
 });
+
+function cancelBooking(bookingId) {
+    if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+    fetch(`/api/cancel_booking.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: bookingId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Booking canceled successfully!");
+            location.reload();
+        } else {
+            alert("Failed to cancel booking.");
+        }
+    })
+    .catch(error => console.error("Error canceling booking:", error));
+}
 </script>
 
-
+<?php include __DIR__ . '/../scripts/dashboardScript.php'; ?>
+<?php include __DIR__ .'/../components/ticket-modal.php'?>;
 <?php include __DIR__ . '/../components/footer.php'; ?>

@@ -17,7 +17,6 @@ $query = "
     JOIN movies ON bookings.movie_id = movies.id
     WHERE bookings.user_id = ? 
     AND movies.show_time > NOW() 
-    AND bookings.status = 'confirmed'
 ";
 
 $stmt = $conn->prepare($query);
@@ -25,6 +24,9 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $row = $result->fetch_assoc();
+
+// Debugging information
+error_log("Active tickets query result: " . json_encode($row));
 
 echo json_encode(["active_tickets" => $row["active_tickets"]]);
 
