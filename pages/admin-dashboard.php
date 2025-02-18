@@ -171,15 +171,11 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
         </div>
         <!-- New Show Times Section -->
         <div>
-          <label class="block text-gray-300 mb-2">Show Times</label>
-          <!-- Container for pill-like times -->
-          <div id="showTimeContainer" class="flex flex-wrap gap-2 mb-2"></div>
-          <div class="flex">
-            <input type="time" id="newShowTime" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-l-lg text-white">
-            <button type="button" onclick="addShowTime()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg transition-colors">Add Time</button>
+          <label class="block text-gray-300 mb-2">Show Time</label>
+          <div id="showTimesContainer" class="mt-4">
+            <!-- Show times will be dynamically inserted here -->
           </div>
-          <!-- Hidden field to store the JSON array -->
-          <input type="hidden" name="show_time" id="showTimeInput">
+          <input type="datetime-local" name="show_time" id="showTimeInput" required class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
         </div>
         <div class="flex justify-end space-x-3">
           <button type="button" onclick="closeMovieModal()" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors">Cancel</button>
@@ -498,20 +494,40 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 
     async function deleteMovie(movieId) {
       if (!confirm('Are you sure you want to delete this movie?')) return;
+      
       try {
-        const response = await fetch('/api/api.php', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ action: 'delete_movie', id: movieId })
-        });
-        const result = await response.json();
-        if (result.success) fetchData('movies');
-        alert(result.message);
+          const response = await fetch('/api/api.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'delete_movie', id: movieId })
+          });
+
+          // Log full response
+          const textResponse = await response.text();
+          console.log('Server Response:', textResponse);
+
+          let result;
+          try {
+              result = JSON.parse(textResponse); // Convert text to JSON
+          } catch (jsonError) {
+              console.error('Invalid JSON response:', textResponse);
+              alert('Failed to delete movie: Invalid server response');
+              return;
+          }
+
+          if (result.success) {
+              fetchData('movies'); // Refresh movie list
+              alert(result.message);
+          } else {
+              alert('Failed to delete movie: ' + result.message);
+          }
       } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to delete movie');
+          console.error('Error:', error);
+          alert('Failed to delete movie');
       }
     }
+
+
 
     async function fetchData(type) {
       try {
@@ -560,10 +576,11 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 
     function closeMovieModal() {
       const modal = document.getElementById('movieModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      document.getElementById('movieForm').reset();
-      currentShowTimes = [];
+      if (modal) {
+          modal.classList.add('hidden'); // Hide the modal
+      }
+
+      // Call updateShowTimesUI only if necessary
       updateShowTimesUI();
     }
 
@@ -583,15 +600,18 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     }
 
     function updateShowTimesUI() {
-      const container = document.getElementById('showTimeContainer');
-      container.innerHTML = '';
-      currentShowTimes.forEach((time, index) => {
-        const pill = document.createElement('span');
-        pill.className = "bg-blue-600 text-blue-200 px-3 py-1 rounded-full text-sm flex items-center";
-        pill.innerHTML = `${time} <button onclick="removeShowTime(${index})" class="ml-2 text-blue-300 hover:text-blue-400">&times;</button>`;
-        container.appendChild(pill);
-      });
-      document.getElementById('showTimeInput').value = JSON.stringify(currentShowTimes);
+      const showTimesContainer = document.getElementById('showTimesContainer');
+      if (!showTimesContainer) {
+          console.error('Element with ID "showTimesContainer" not found in the DOM.');
+          return;
+      }
+      console.log('Updating show times UI:', showTimesContainer);
+      showTimesContainer.innerHTML = ''; // Clear existing content
+
+      // Example: Dynamically add new content
+      const newContent = document.createElement('div');
+      newContent.textContent = 'Updated show times will appear here.';
+      showTimesContainer.appendChild(newContent);
     }
   </script>
 </body>

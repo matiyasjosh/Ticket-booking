@@ -41,13 +41,14 @@
                     Now Showing
                 </span>
                 <h1 class="mt-4 text-5xl font-bold tracking-tight sm:text-6xl">
-                    Dune: Part Two
+                    Kuret, Book Movies Online
                 </h1>
                 <p class="mt-6 text-xl leading-8 text-white/80">
-                    Continue the journey beyond imagination as Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.
+                    Kuret is a platform where you can book movie tickets online. We have a wide range of movies to choose from. 
+                    You can book tickets for your favorite movies and enjoy the show with your friends and family.
                 </p>
                 <div class="mt-10">
-                    <a href="/pages/dashboard.php" class="rounded-lg bg-white px-8 py-3 text-lg font-semibold text-black transition-all hover:scale-105 hover:bg-white/90">
+                    <a href="/pages/movies.php" class="rounded-lg bg-white px-8 py-3 text-lg font-semibold text-black transition-all hover:scale-105 hover:bg-white/90">
                         Book Tickets
                     </a>
                 </div>
