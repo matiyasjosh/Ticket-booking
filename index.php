@@ -70,33 +70,37 @@
                 <?php
                 $movies = [
                     [
+                        "id" => 2,
                         "title" => "Napoleon",
                         "image" => "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=2070",
                         "duration" => "2h 38m",
                         "date" => "March 15, 2024"
                     ],
                     [
+                        "id" => 3,
                         "title" => "Poor Things",
                         "image" => "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925",
                         "duration" => "2h 21m",
                         "date" => "March 18, 2024"
                     ],
                     [
+                        "id" => 4,
                         "title" => "Anyone But You",
                         "image" => "https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=2069",
                         "duration" => "1h 43m",
                         "date" => "March 20, 2024"
                     ],
                     [
+                        "id" => 5,
                         "title" => "Drive-Away Dolls",
                         "image" => "https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1935",
                         "duration" => "1h 24m",
                         "date" => "March 22, 2024"
                     ]
                 ];
-                foreach ($movies as $movie):
-                    renderMovieCard($movie);
                 ?>
+                <?php foreach ($movies as $movie): ?>
+                    <a href="/pages/movie-details.php?id=<?php echo $movie['id']; ?>"><?php renderMovieCard($movie); ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
