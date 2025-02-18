@@ -40,13 +40,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const loading = document.getElementById('loading');
     const error = document.getElementById('error');
 
-    function getMovieFromStorage() {
-        const cachedData = localStorage.getItem('moviesData');
-        if (!cachedData) return null;
+    // function getMovieFromStorage() {
+    //     const cachedData = localStorage.getItem('moviesData');
+    //     if (!cachedData) return null;
 
-        const { data } = JSON.parse(cachedData);
-        return data.find(movie => movie.id === movieId);
-    }
+    //     const { data } = JSON.parse(cachedData);
+    //     return data.find(movie => movie.id === movieId);
+    // }
 
     function formatDuration(minutes) {
         const hours = Math.floor(minutes / 60);
@@ -139,30 +139,22 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    // Try to get movie from localStorage first
-    const movie = getMovieFromStorage();
-    console.log("movie",movie)
     
-    if (movie) {
-        renderMovieDetails(movie);
-        loading.style.display = 'none';
-    } else {
         // If not in localStorage, fetch from API
-        fetch(`/api.php?action=get_movie&id=${movieId}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(movie => {
-                renderMovieDetails(movie);
-                loading.style.display = 'none';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                error.classList.remove('hidden');
-                loading.style.display = 'none';
-            });
-    }
+    fetch(`/api/api.php?action=get_movie&id=${movieId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(movie => {
+            renderMovieDetails(movie);
+            loading.style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            error.classList.remove('hidden');
+            loading.style.display = 'none';
+        });
 });
 </script>
 

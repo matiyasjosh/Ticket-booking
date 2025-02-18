@@ -610,7 +610,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 
       // Example: Dynamically add new content
       const newContent = document.createElement('div');
-      newContent.textContent = 'Updated show times will appear here.';
+      // newContent.textContent = 'Updated show times will appear here.';
       showTimesContainer.appendChild(newContent);
     }
   </script>

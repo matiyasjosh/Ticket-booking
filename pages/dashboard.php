@@ -119,83 +119,91 @@ include __DIR__ . '/../components/navbar.php';
 </main>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const userId = <?php echo $_SESSION['user_id']; ?>;    
-    console.log("1 birr", userId);
-    fetch(`/api/get_active_tickets.php?user_id=${userId}`)
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        const userId = <?php echo $_SESSION['user_id']; ?>;    
+        console.log("1 birr", userId);
+        fetch(`/api/get_active_tickets.php?user_id=${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.active_tickets !== undefined) {
+                    document.getElementById("active-tickets-count").innerText = data.active_tickets;
+                }
+            })
+            .catch(error => console.error("Error fetching active tickets:", error));
+
+
+        // upcoming moive count
+        fetch(`/api/get_upcoming_movies.php`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.upcoming_movies !== undefined) {
+                    document.getElementById("upcoming-movies-count").innerText = data.upcoming_movies;
+                }
+            })
+            .catch(error => console.error("Error fetching upcoming movies:", error));
+
+            // the table part
+            fetch(`/api/get_recent_bookings.php?user_id=${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById("recent-bookings-body");
+                tableBody.innerHTML = ""; // Clear previous content
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center">No recent bookings</td></tr>`;
+                    return;
+                }
+
+                console.log("Wegentatna hzbtat", data);
+                data.forEach(booking => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="py-4">${booking.movie_name}</td>
+                        <td class="py-4">${formatDate(booking.show_date)}</td>
+                        <td class="py-4">
+                            <button id="openModal" class="bg-green-300 text-green-800 px-2 py-1 rounded-full hover:text-green-800 hover:bg-green-100" data-movie-id="${booking.movie_id}" data-seats="${booking.seat_numbers}">
+                                Show Ticket
+                            </button>
+                        </td>
+                        <td class="py-4">
+                            <button class="bg-red-300 text-red-700 px-2 py-1 rounded-full hover:text-red-700 hover:bg-red-100" onclick="cancelBooking(${booking.booking_id  })">
+                                Cancel
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Error fetching recent bookings:", error));
+    });
+
+    function cancelBooking(bookingId) {
+        if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+        fetch(`/api/cancel_booking.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_id: bookingId })
+        })
         .then(response => response.json())
         .then(data => {
-            if (data.active_tickets !== undefined) {
-                document.getElementById("active-tickets-count").innerText = data.active_tickets;
+            if (data.success) {
+                alert("Booking canceled successfully!");
+                location.reload();
+            } else {
+                alert("Failed to cancel booking.");
             }
         })
-        .catch(error => console.error("Error fetching active tickets:", error));
-
-
-    // upcoming moive count
-    fetch(`/api/get_upcoming_movies.php`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.upcoming_movies !== undefined) {
-                document.getElementById("upcoming-movies-count").innerText = data.upcoming_movies;
-            }
-        })
-        .catch(error => console.error("Error fetching upcoming movies:", error));
-
-        // the table part
-        fetch(`/api/get_recent_bookings.php?user_id=${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.getElementById("recent-bookings-body");
-            tableBody.innerHTML = ""; // Clear previous content
-
-            if (data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center">No recent bookings</td></tr>`;
-                return;
-            }
-
-            console.log("Wegentatna hzbtat", data);
-            data.forEach(booking => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td class="py-4">${booking.movie_name}</td>
-                    <td class="py-4">${booking.show_date}</td>
-                    <td class="py-4">
-                        <button id="openModal" class="bg-green-300 text-green-800 px-2 py-1 rounded-full hover:text-green-800 hover:bg-green-100" data-movie-id="${booking.movie_id}" data-seats="${booking.seat_numbers}">
-                            Show Ticket
-                        </button>
-                    </td>
-                    <td class="py-4">
-                        <button class="bg-red-300 text-red-700 px-2 py-1 rounded-full hover:text-red-700 hover:bg-red-100" onclick="cancelBooking(${booking.booking_id  })">
-                            Cancel
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        })
-        .catch(error => console.error("Error fetching recent bookings:", error));
-});
-
-function cancelBooking(bookingId) {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
-
-    fetch(`/api/cancel_booking.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking_id: bookingId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("Booking canceled successfully!");
-            location.reload();
-        } else {
-            alert("Failed to cancel booking.");
-        }
-    })
-    .catch(error => console.error("Error canceling booking:", error));
-}
+        .catch(error => console.error("Error canceling booking:", error));
+    }
 </script>
 
 <?php include __DIR__ . '/../scripts/dashboardScript.php';?>

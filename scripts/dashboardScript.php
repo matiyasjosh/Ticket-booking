@@ -22,7 +22,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const cachedData = localStorage.getItem('moviesData');
         if (!cachedData) return null;
         const { data } = JSON.parse(cachedData);
-        return data.find(movie => movie.id === movieId);
+        const numericMovieId = parseInt(movieId, 10);
+        return data.find(movie => movie.id === numericMovieId);
     }
 
     function openTicketModal(movieId, selectedSeats) {

@@ -269,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_SERVER['CONTENT_TYPE']) |
                     $stmt = mysqli_prepare($conn, 
                         "INSERT INTO movies (title, description, duration, price, image, show_time) 
                          VALUES (?, ?, ?, ?, ?, ?)");
-                    mysqli_stmt_bind_param($stmt, "ssidss", $title, $description, $duration, $price, $fileName, $show_time);
+                    mysqli_stmt_bind_param($stmt, "ssidss", $title, $description, $duration, $price, $targetPath, $show_time);
 
                     if (mysqli_stmt_execute($stmt)) {
                         sendJsonResponse(['success' => true, 'message' => 'Movie added successfully']);
@@ -489,6 +489,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
             break;
     }
+}
+
+// Check if the required parameters are provided
+if (isset($_GET['action']) || $_GET['action'] == 'get_movie' || isset($_GET['id'])) {
+    $movieId = intval($_GET['id']); // Sanitize input
+    // Validate the movie ID
+    if ($movieId <= 0) {
+        http_response_code(400); // Bad Request
+        echo json_encode(['error' => 'Invalid movie ID']);
+        exit();
+    }
+
+    // Fetch the movie by ID
+    $query = "SELECT * FROM movies WHERE id = ? LIMIT 1";
+    $stmt = $conn->prepare($query);
+
+    if (!$stmt) {
+        http_response_code(500); // Internal Server Error
+        echo json_encode(['error' => 'Database error']);
+        exit();
+    }
+
+    $stmt->bind_param("i", $movieId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        http_response_code(404); // Not Found
+        echo json_encode(['error' => 'Movie not found']);
+        exit();
+    }
+
+    $movie = $result->fetch_assoc();
+
+    // Convert show_date and show_time to appropriate formats if needed
+    if ($movie['show_date'] === 'now_showing') {
+        $movie['show_date'] = 'Now Showing';
+    } else {
+        $movie['show_date'] = date('Y-m-d', strtotime($movie['show_date']));
+    }
+
+    if ($movie['show_time']) {
+        $movie['show_time'] = date('Y-m-d H:i:s', strtotime($movie['show_time']));
+    }
+
+    // Return the movie data as JSON
+    http_response_code(200); // OK
+    echo json_encode($movie);
+
+    // Close the statement and connection
+    $stmt->close();
 }
 
 mysqli_close($conn);

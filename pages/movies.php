@@ -42,16 +42,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loading.style.display = 'block';
 
     // Try to load cached data first
-    const cachedData = localStorage.getItem(storageKey);
-    if (cachedData) {
-        const { timestamp, data } = JSON.parse(cachedData);
-        if (Date.now() - timestamp < cacheDuration) {
-            renderMovies(data);
-            loading.style.display = 'none';
-            moviesGrid.style.display = 'grid';
-            return;
-        }
-    }
+    // const cachedData = localStorage.getItem(storageKey);
+    // if (cachedData) {
+    //     const { timestamp, data } = JSON.parse(cachedData);
+    //     if (Date.now() - timestamp < cacheDuration) {
+    //         renderMovies(data);
+    //         loading.style.display = 'none';
+    //         moviesGrid.style.display = 'grid';
+    //         return;
+    //     }
+    // }
 
     // Fetch fresh data from API
     fetch('/api/api.php?action=get_movies')
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="flex items-center gap-1">
                                 <i class="ph ph-calendar text-white"></i>
-                                <span>${formatDate(movie.show_date)}</span>
+                                <span>${formatDate(movie.show_time)}</span>
                             </div>
                         </div>
                     </div>

@@ -26,10 +26,17 @@
         // it gets the movie from the local storage
         function getMovieFromStorage() {
             const cachedData = localStorage.getItem('moviesData');
+            console.log("mugged data:", cachedData);
             if (!cachedData) return null;
-
             const { data } = JSON.parse(cachedData);
-            return data.find(movie => movie.id === movieId);
+
+            // Ensure movieId is a number
+            const numericMovieId = parseInt(movieId, 10);
+            const movie = data.find(movie => movie.id === numericMovieId);
+
+
+            console.log("mata mata:", movie);
+            return movie;
         }
 
         // it formats the duration of the movie
@@ -110,6 +117,9 @@
                 return;
             }
             const movie = getMovieFromStorage();
+            console.log("movie data:", getMovieFromStorage());
+
+            console.log("1 birr", movie)
             if (movie) {
                 const totalCost = selectedSeats.length * Number(movie.price);
                 movieTitleSpan.textContent = movie.title;
