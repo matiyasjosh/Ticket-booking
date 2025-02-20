@@ -15,9 +15,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 
-// Debugging information
-error_log("upcoming 1birr's: " . json_encode($row));
-
 echo json_encode(["upcoming_movies" => $row["upcoming_movies"]]);
 
 $stmt->close();

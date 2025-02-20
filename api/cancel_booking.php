@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id'])) {
 $data = json_decode(file_get_contents("php://input"), true);
 $booking_id = $data['booking_id'];
 
-error_log("wegentat".$booking_id);
 
 $query = "DELETE FROM bookings WHERE id = ? AND user_id = ?";
 $stmt = $conn->prepare($query);

@@ -26,7 +26,6 @@
         // it gets the movie from the local storage
         function getMovieFromStorage() {
             const cachedData = localStorage.getItem('moviesData');
-            console.log("mugged data:", cachedData);
             if (!cachedData) return null;
             const { data } = JSON.parse(cachedData);
 
@@ -35,7 +34,6 @@
             const movie = data.find(movie => movie.id === numericMovieId);
 
 
-            console.log("mata mata:", movie);
             return movie;
         }
 
@@ -51,7 +49,6 @@
 
         // it fetches the booked seats from the database
         function fetchBookedSeats() {
-            console.log("Fetching booked seats for movie ID:", movieId);
             fetch(`/api/get_booked_seats.php?movie_id=${movieId}`)
                 .then(res => {
                     if (!res.ok) {
@@ -117,9 +114,7 @@
                 return;
             }
             const movie = getMovieFromStorage();
-            console.log("movie data:", getMovieFromStorage());
 
-            console.log("1 birr", movie)
             if (movie) {
                 const totalCost = selectedSeats.length * Number(movie.price);
                 movieTitleSpan.textContent = movie.title;
